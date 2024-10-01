@@ -1,0 +1,25 @@
+{
+    "name": "obsidian-templater",
+    "version": "1.0.0",
+    "description": "obsidian templater plugin",
+    "main": "main.js",
+    "scripts": {
+        "build": "rollup --config rollup.config.js",
+        "dev": "rollup --config rollup.config.js -w"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^26.0.1",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-typescript": "^11.1.6",
+        "obsidian": "^1.6.6",
+        "rollup": "^4.21.0",
+        "typescript": "^5.5.4"
+    },
+    "dependencies": {
+        "tslib": "^2.7.0"
+    },
+    "type": "module"
+}
