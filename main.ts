@@ -22,8 +22,8 @@ export default class DatedTemplatePlugin extends Plugin {
     this.addSettingTab(new SettingsTab(this.app, this));
 
     this.addCommand({
-      id: 'create-dated-file',
-      name: 'Create Dated File from Template',
+      id: 'create-dated-template',
+      name: 'create dated file with template - tracking/journal',
       callback: () => {
         new ItemSelector(this.app, this.settings.items, this.createDatedFile.bind(this)).open();
       }

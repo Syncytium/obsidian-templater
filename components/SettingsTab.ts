@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TFolder, TFile } from 'obsidian';
+import { App, PluginSettingTab, Setting, TFolder, TFile, normalizePath } from 'obsidian';
 import DatedTemplatePlugin from '../main';
 import { Item } from '../models/Item';
 
@@ -32,7 +32,7 @@ export class SettingsTab extends PluginSettingTab {
 
   addItemSetting(containerEl: HTMLElement, item: Item, index: number) {
     const itemSetting = new Setting(containerEl)
-      .setName(`Item ${index + 1}`)
+      // .setName(`Item ${index + 1}`)
       .addButton(cb => cb
         .setIcon('trash')
         .onClick(() => {
@@ -43,7 +43,7 @@ export class SettingsTab extends PluginSettingTab {
 
     itemSetting.addText(text => {
       const textComponent = text
-        .setPlaceholder('Template')
+        .setPlaceholder('template')
         .setValue(item.template)
         .onChange(async (value) => {
           item.template = value;
@@ -57,7 +57,7 @@ export class SettingsTab extends PluginSettingTab {
 
     itemSetting.addText(text => {
       const textComponent = text
-        .setPlaceholder('Location')
+        .setPlaceholder('folder')
         .setValue(item.location)
         .onChange(async (value) => {
           item.location = value;
@@ -70,7 +70,7 @@ export class SettingsTab extends PluginSettingTab {
     });
 
     itemSetting.addText(text => text
-      .setPlaceholder('File Pattern (e.g., YYYY-MM-DD)')
+      .setPlaceholder('file pattern (e.g., yyyy/mm/yyyy-mm-dd)')
       .setValue(item.filePattern)
       .onChange(async (value) => {
         item.filePattern = value;
@@ -78,7 +78,7 @@ export class SettingsTab extends PluginSettingTab {
       }));
   }
 
-  setupAutoComplete(inputEl: HTMLInputElement, items: string[]) {
+  async setupAutoComplete(inputEl: HTMLInputElement, items: string[]) {
     const autoCompleteContainer = createDiv('suggestion-container');
     document.body.appendChild(autoCompleteContainer);
     autoCompleteContainer.style.display = 'none';
@@ -99,7 +99,7 @@ export class SettingsTab extends PluginSettingTab {
       const suggestionItems = autoCompleteContainer.querySelectorAll('.suggestion-item');
       if (index >= 0 && index < suggestionItems.length) {
         selectedIndex = index;
-        inputEl.value = suggestionItems[index].textContent;
+        inputEl.value = suggestionItems[index].textContent ?? '';
         updateSelectedItem();
       }
     };
@@ -112,7 +112,7 @@ export class SettingsTab extends PluginSettingTab {
       autoCompleteContainer.style.top = (rect.bottom + window.scrollY) + 'px';
     };
 
-    inputEl.addEventListener('input', () => {
+    inputEl.addEventListener('input', async () => {
       const value = inputEl.value.toLowerCase();
       const matches = items.filter(item => item.toLowerCase().includes(value));
 
@@ -125,6 +125,7 @@ export class SettingsTab extends PluginSettingTab {
           suggestionEl.setText(match);
           suggestionEl.onClickEvent(() => {
             inputEl.value = match;
+            inputEl.dispatchEvent(new Event('input'));
             autoCompleteContainer.style.display = 'none';
           });
         });
@@ -134,7 +135,7 @@ export class SettingsTab extends PluginSettingTab {
       }
     });
 
-    inputEl.addEventListener('keydown', (event) => {
+    inputEl.addEventListener('keydown', async (event) => {
       const suggestionItems = autoCompleteContainer.querySelectorAll('.suggestion-item');
 
       switch (event.key) {
@@ -149,7 +150,8 @@ export class SettingsTab extends PluginSettingTab {
         case 'Enter':
           event.preventDefault();
           if (selectedIndex >= 0) {
-            inputEl.value = suggestionItems[selectedIndex].textContent;
+            inputEl.value = suggestionItems[selectedIndex].textContent ?? '';
+            inputEl.dispatchEvent(new Event('input'));
             autoCompleteContainer.style.display = 'none';
           }
           break;
@@ -181,17 +183,15 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   getTemplates(): string[] {
-    const templateFolder = this.app.vault.getAbstractFileByPath(this.app.vault.configDir + '/templates');
-    if (templateFolder instanceof TFolder) {
-      return templateFolder.children
-        .filter(file => file instanceof TFile)
-        .map(file => file.path);
-    }
-    return [];
+    return this.app.vault.getFiles()
+      // return this.app.vault.getAllFolders()
+      // .filter(file => file instanceof TFolder)
+      .map(file => file.path);
   }
 
   getFolders(): string[] {
-    return this.app.vault.getAllLoadedFiles()
+    // return this.app.vault.getAllLoadedFiles()
+    return this.app.vault.getAllFolders()
       .filter(file => file instanceof TFolder)
       .map(folder => folder.path);
   }
